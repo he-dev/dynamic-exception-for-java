@@ -14,12 +14,12 @@ fun dynamicException(name: String, message: String, inner: Throwable? = null): j
     val diagnosticCollector = DiagnosticCollector<JavaFileObject>()
 
     val values = TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER)
-    values.put("name", name)
+    values["name"] = name
     var sourceCode = SourceCodeJavaFileObject(
         "com.he-dev.${name}Exception",
         dynamicExceptionSourceCode.smartFormat(values)
     )
-    val success = javaCompiler.getTask(
+    javaCompiler.getTask(
         null,
         null,
         diagnosticCollector,
@@ -47,7 +47,7 @@ fun dynamicException(name: String, message: String, inner: Throwable? = null): j
     }
 }
 
-fun Constructor<out Any>.makeAccessible(): Constructor<out Any>{
+fun Constructor<out Any>.makeAccessible(): Constructor<out Any> {
     this.isAccessible = true
     return this
 }
@@ -65,7 +65,7 @@ public class {Name}Exception extends java.lang.Exception {
 """.trimIndent()
 
 class SourceCodeJavaFileObject : SimpleJavaFileObject {
-    val sourceCode: CharSequence
+    private val sourceCode: CharSequence
 
     constructor(className: String, sourceCode: CharSequence) :
             super(
