@@ -1,4 +1,5 @@
 import java.io.File
+import java.lang.reflect.Constructor
 import java.net.URI
 import java.net.URL
 import java.net.URLClassLoader
@@ -8,7 +9,7 @@ import javax.tools.JavaFileObject
 import javax.tools.SimpleJavaFileObject
 import javax.tools.ToolProvider
 
-fun dynamicException(name: String, message: String): java.lang.Exception {
+fun dynamicException(name: String, message: String, inner: Throwable? = null): java.lang.Exception {
     val javaCompiler = ToolProvider.getSystemJavaCompiler()
     val diagnosticCollector = DiagnosticCollector<JavaFileObject>()
 
@@ -28,9 +29,27 @@ fun dynamicException(name: String, message: String): java.lang.Exception {
     ).call()
 
     val classLoader = URLClassLoader.newInstance(arrayOf<URL>(File("").toURI().toURL()))
-    val ctor = Class.forName("${name}Exception", true, classLoader).getConstructor(String::class.java)
-    ctor.isAccessible = true
-    return ctor.newInstance(message) as java.lang.Exception
+
+    var getCtor: () -> Constructor<out Any> = {
+        val cls = Class.forName("${name}Exception", true, classLoader)
+        val ctor = if (inner == null) {
+            cls.getConstructor(String::class.java)
+        } else {
+            cls.getConstructor(String::class.java, Throwable::class.java)
+        }
+        ctor.makeAccessible()
+    }
+
+    return if (inner == null) {
+        getCtor().newInstance(message) as java.lang.Exception
+    } else {
+        getCtor().newInstance(message, inner) as java.lang.Exception
+    }
+}
+
+fun Constructor<out Any>.makeAccessible(): Constructor<out Any>{
+    this.isAccessible = true
+    return this
 }
 
 
