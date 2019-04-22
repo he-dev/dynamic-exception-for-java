@@ -41,10 +41,10 @@ fun dynamicException(name: String, message: String, inner: Throwable? = null): j
     }
 
     return if (inner == null) {
-        getCtor().newInstance(message) as java.lang.Exception
+        getCtor().newInstance(message)
     } else {
-        getCtor().newInstance(message, inner) as java.lang.Exception
-    }
+        getCtor().newInstance(message, inner)
+    } as java.lang.Exception
 }
 
 fun Constructor<out Any>.makeAccessible(): Constructor<out Any> {
